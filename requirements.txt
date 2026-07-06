@@ -3,3 +3,5 @@ uvicorn[standard]==0.35.0
 sqlalchemy==2.0.41
 psycopg[binary]==3.2.9
 pydantic-settings==2.10.1
+langchain>=1.0.0,<2.0.0
+langchain-openai>=1.0.0,<2.0.0
