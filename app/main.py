@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app import models  # noqa: F401 - importa modelos para registrar tabelas.
 from app.db import Base, engine
+from app.routers import tutors
 
 
 @asynccontextmanager
@@ -15,6 +16,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="DOT Interview Backend", lifespan=lifespan)
+app.include_router(tutors.router)
 
 
 @app.get("/health")

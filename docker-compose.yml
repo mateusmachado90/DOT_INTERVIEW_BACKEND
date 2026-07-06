@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dot_interview:dot_interview_password@postgres:5432/dot_interview}
+      API_TOKEN: ${API_TOKEN:-dev-api-token}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
