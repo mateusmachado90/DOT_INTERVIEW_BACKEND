@@ -4,7 +4,7 @@ Repositorio de backend da solucao de plataforma de tutores para entrevista na DO
 
 ## Ambiente local
 
-Este projeto usa Docker Compose para disponibilizar um banco PostgreSQL local.
+Este projeto usa Docker Compose para disponibilizar uma API FastAPI e um banco PostgreSQL local.
 
 ### Requisitos
 
@@ -19,7 +19,7 @@ O `docker-compose.yml` ja possui valores padrao para desenvolvimento local. Para
 cp .env.example .env
 ```
 
-### Subir o banco
+### Subir a aplicacao
 
 ```bash
 docker compose up -d
@@ -27,6 +27,8 @@ docker compose up -d
 
 Se o ambiente usar Docker Compose v1, use `docker-compose` no lugar de `docker compose`.
 
+API disponivel em `http://localhost:8000` por padrao.
+Healthcheck da API: `http://localhost:8000/health`.
 O PostgreSQL ficara disponivel em `localhost:5432` por padrao.
 
 ### Verificar status

@@ -1,4 +1,17 @@
 services:
+  api:
+    build:
+      context: .
+    container_name: dot_interview_api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dot_interview:dot_interview_password@postgres:5432/dot_interview}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     container_name: dot_interview_postgres
