@@ -46,3 +46,6 @@ Para remover tambem os dados persistidos do banco:
 ```bash
 docker compose down -v
 ```
+
+Notas do candidato:
+* Embora o SQLite fosse suficiente para este MVP devido à sua simplicidade, optou-se pelo PostgreSQL porque a aplicação foi concebida como um serviço web para múltiplos usuários. Essa escolha representa melhor uma arquitetura orientada à produção, oferece garantias mais robustas de concorrência e evita um esforço de migração futuro caso a plataforma evolua.
