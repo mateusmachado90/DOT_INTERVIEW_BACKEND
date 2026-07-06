@@ -38,6 +38,8 @@ Na inicializacao da API, as tabelas basicas do MVP sao criadas automaticamente n
 As rotas administrativas do MVP usam um token simples no header `X-API-Token`.
 O valor padrao local e `dev-api-token`, configuravel por `API_TOKEN`.
 
+A API administrativa é protegida por uma única chave de API (API Key) configurada por meio de variáveis de ambiente. Como este MVP é destinado a um único usuário administrador e não exige gerenciamento de usuários nem autorização com controle granular de permissões, o uso de uma API Key oferece uma solução mais simples, com complexidade de implementação significativamente menor. Uma versão pronta para produção provavelmente adotaria autenticação baseada em JWT, integrada a um provedor de identidade.
+
 Exemplo:
 
 ```bash
