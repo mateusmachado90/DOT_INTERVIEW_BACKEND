@@ -33,6 +33,12 @@ O PostgreSQL ficara disponivel em `localhost:5432` por padrao.
 
 Na inicializacao da API, as tabelas basicas do MVP sao criadas automaticamente no PostgreSQL a partir dos modelos SQLAlchemy.
 
+Tambem sao cadastrados tutores demonstrativos de forma idempotente:
+
+- `Tutor Copa do Mundo FIFA`, com fonte em `https://pt.wikipedia.org/wiki/Copa_do_Mundo_FIFA`
+- `Tutor Python`, com fontes em `https://docs.python.org/3/library/pathlib.html`, `https://docs.python.org/3/library/functions.html` e `https://docs.python.org/3/tutorial/classes.html`
+- `Tutor Revolucao Francesa`, com fonte em `https://pt.wikipedia.org/wiki/Revolu%C3%A7%C3%A3o_Francesa`
+
 ### Autenticacao
 
 As rotas administrativas do MVP usam um token simples no header `X-API-Token`.

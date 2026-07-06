@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.db import get_db
 from app.models import Tutor
@@ -22,7 +22,9 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 
 def get_tutor_or_404(db: Session, tutor_id: uuid.UUID) -> Tutor:
-    tutor = db.get(Tutor, tutor_id)
+    tutor = db.scalar(
+        select(Tutor).options(selectinload(Tutor.sources)).where(Tutor.id == tutor_id)
+    )
     if tutor is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tutor not found")
     return tutor
@@ -43,7 +45,13 @@ def list_tutors(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> list[Tutor]:
-    statement = select(Tutor).order_by(Tutor.created_at.desc()).offset(offset).limit(limit)
+    statement = (
+        select(Tutor)
+        .options(selectinload(Tutor.sources))
+        .order_by(Tutor.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
     return list(db.scalars(statement))
 
 
