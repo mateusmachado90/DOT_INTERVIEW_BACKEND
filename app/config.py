@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://dot_interview:dot_interview_password@postgres:5432/dot_interview"
     )
+    # Token simples para proteger endpoints administrativos do MVP.
+    api_token: str = "dev-api-token"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
