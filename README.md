@@ -44,6 +44,7 @@ Tambem sao cadastrados tutores demonstrativos de forma idempotente:
 As rotas administrativas do MVP usam um token simples no header `X-API-Token`.
 O valor padrao local e `dev-api-token`, configuravel por `API_TOKEN`.
 O modelo usado pelo agente de conversacao e configuravel por `LANGCHAIN_MODEL`.
+A identificacao enviada pelas ferramentas do agente pode ser ajustada por `CONVERSATION_AGENT_NAME` e `CONVERSATION_AGENT_VERSION`.
 Para usar o provedor OpenAI via LangChain, configure tambem `OPENAI_API_KEY`.
 
 A API administrativa é protegida por uma única chave de API (API Key) configurada por meio de variáveis de ambiente. Como este MVP é destinado a um único usuário administrador e não exige gerenciamento de usuários nem autorização com controle granular de permissões, o uso de uma API Key oferece uma solução mais simples, com complexidade de implementação significativamente menor. Uma versão pronta para produção provavelmente adotaria autenticação baseada em JWT, integrada a um provedor de identidade.

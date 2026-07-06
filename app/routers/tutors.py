@@ -158,6 +158,7 @@ def get_or_create_chat_session(
             )
         return chat_session
 
+    # Token opaco de 32 caracteres hexadecimais minusculos, sem hifens, facil de trafegar em JSON.
     chat_session = ChatSession(tutor=tutor, session_token=uuid.uuid4().hex)
     db.add(chat_session)
     db.flush()

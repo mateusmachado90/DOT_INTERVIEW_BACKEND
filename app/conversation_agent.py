@@ -73,7 +73,6 @@ def _build_system_prompt(tutor: Tutor) -> str:
             "",
             "Voce esta em uma conversa de tutoria.",
             "Decida quando usar as ferramentas disponiveis para consultar as fontes do tutor.",
-            "Nao use estrategia de RAG, embeddings, banco vetorial ou indice vetorial externo.",
             "Quando usar uma fonte, mencione quais fontes ajudaram na resposta.",
             "Se as fontes nao forem suficientes, diga isso claramente e responda apenas com o que for seguro.",
         ]
@@ -138,7 +137,9 @@ def _load_source_text(location: str) -> str:
     if parsed.scheme not in {"http", "https"}:
         return f"Tipo de fonte ainda nao suportado para leitura automatica: {location}"
 
-    request = Request(location, headers={"User-Agent": "DOT-Interview-Tutor-MVP/1.0"})
+    settings = get_settings()
+    user_agent = f"{settings.conversation_agent_name}/{settings.conversation_agent_version}"
+    request = Request(location, headers={"User-Agent": user_agent})
     try:
         with urlopen(request, timeout=10) as response:
             raw_html = response.read(MAX_SOURCE_CHARS).decode("utf-8", errors="ignore")
