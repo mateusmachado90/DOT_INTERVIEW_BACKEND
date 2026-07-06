@@ -36,6 +36,17 @@ class TutorSourceRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TutorChatRequest(BaseModel):
+    message: str = Field(min_length=1)
+    session_token: str | None = Field(default=None, min_length=1, max_length=255)
+
+
+class TutorChatResponse(BaseModel):
+    session_id: uuid.UUID
+    session_token: str
+    answer: str
+
+
 class TutorRead(TutorBase):
     id: uuid.UUID
     sources: list[TutorSourceRead] = Field(default_factory=list)
