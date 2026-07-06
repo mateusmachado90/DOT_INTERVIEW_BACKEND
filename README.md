@@ -31,6 +31,8 @@ API disponivel em `http://localhost:8000` por padrao.
 Healthcheck da API: `http://localhost:8000/health`.
 O PostgreSQL ficara disponivel em `localhost:5432` por padrao.
 
+Na inicializacao da API, as tabelas basicas do MVP sao criadas automaticamente no PostgreSQL a partir dos modelos SQLAlchemy.
+
 ### Verificar status
 
 ```bash
