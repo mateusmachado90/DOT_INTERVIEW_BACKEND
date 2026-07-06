@@ -7,6 +7,7 @@ from app.config import get_settings
 
 
 class Base(DeclarativeBase):
+    # Registro de metadata compartilhado por todos os modelos SQLAlchemy.
     pass
 
 
@@ -15,6 +16,7 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def get_db() -> Generator[Session, None, None]:
+    # Dependencia FastAPI: abre uma sessao por request e sempre fecha ao final.
     db = SessionLocal()
     try:
         yield db

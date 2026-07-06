@@ -10,6 +10,7 @@ from app.db import Base
 
 
 def enum_values(enum_class: type[enum.Enum]) -> list[str]:
+    # Persiste valores como "ACTIVE" e "system", nao os nomes Python dos membros.
     return [member.value for member in enum_class]
 
 
@@ -32,6 +33,8 @@ class ChatMessageRole(str, enum.Enum):
 
 
 class Tutor(Base):
+    """Configuracao principal do tutor, incluindo instrucoes de persona."""
+
     __tablename__ = "tutors"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -67,6 +70,8 @@ class Tutor(Base):
 
 
 class TutorSource(Base):
+    """Fonte de conhecimento vinculada a um tutor."""
+
     __tablename__ = "tutor_sources"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -98,6 +103,8 @@ class TutorSource(Base):
 
 
 class ChatSession(Base):
+    """Contexto de conversa para uma interacao com o tutor."""
+
     __tablename__ = "chat_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -126,6 +133,8 @@ class ChatSession(Base):
 
 
 class ChatMessage(Base):
+    """Mensagem individual armazenada no historico da sessao."""
+
     __tablename__ = "chat_messages"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -148,6 +157,7 @@ class ChatMessage(Base):
     session: Mapped["ChatSession"] = relationship(back_populates="messages")
 
 
+# Indices de FK mantem consultas por tutor/sessao eficientes conforme o uso cresce.
 Index("ix_tutor_sources_tutor_id", TutorSource.tutor_id)
 Index("ix_chat_sessions_tutor_id", ChatSession.tutor_id)
 Index("ix_chat_messages_session_id", ChatMessage.session_id)
