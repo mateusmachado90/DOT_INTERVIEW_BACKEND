@@ -43,6 +43,8 @@ Tambem sao cadastrados tutores demonstrativos de forma idempotente:
 
 As rotas administrativas do MVP usam um token simples no header `X-API-Token`.
 O valor padrao local e `dev-api-token`, configuravel por `API_TOKEN`.
+As origens liberadas para o frontend em desenvolvimento sao configuraveis por `CORS_ORIGINS`
+e, por padrao, incluem `http://localhost:5173` e `http://127.0.0.1:5173`.
 O modelo usado pelo agente de conversacao e configuravel por `LANGCHAIN_MODEL`.
 A identificacao enviada pelas ferramentas do agente pode ser ajustada por `CONVERSATION_AGENT_NAME` e `CONVERSATION_AGENT_VERSION`.
 Para usar o provedor OpenAI via LangChain, configure tambem `OPENAI_API_KEY`.
