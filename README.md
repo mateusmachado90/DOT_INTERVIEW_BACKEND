@@ -61,8 +61,6 @@ LANGCHAIN_MODEL=openai:tencent/hy3:free
 CONVERSATION_AGENT_TIMEOUT_SECONDS=180
 ```
 
-Nao grave chaves reais no repositorio. Se a OpenRouter retornar `402 Insufficient credits`,
-a API respondera com erro controlado informando que o provedor recusou a chamada por creditos insuficientes.
 Para usar o provedor OpenAI diretamente via LangChain, configure `OPENAI_API_KEY`,
 defina `OPENAI_BASE_URL=https://api.openai.com/v1` quando estiver usando Docker Compose
 e selecione um modelo compativel em `LANGCHAIN_MODEL`.
