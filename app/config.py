@@ -15,8 +15,14 @@ class Settings(BaseSettings):
     # Identificacao enviada em requisicoes feitas pelas ferramentas do agente.
     conversation_agent_name: str = "DOT-Interview-Tutor-MVP"
     conversation_agent_version: str = "1.0"
+    # Origens locais permitidas para o frontend Vite em desenvolvimento.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache
