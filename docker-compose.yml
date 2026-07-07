@@ -8,6 +8,12 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dot_interview:dot_interview_password@postgres:5432/dot_interview}
       API_TOKEN: ${API_TOKEN:-dev-api-token}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      LANGCHAIN_MODEL: ${LANGCHAIN_MODEL:-openai:tencent/hy3:free}
+      CONVERSATION_AGENT_TIMEOUT_SECONDS: ${CONVERSATION_AGENT_TIMEOUT_SECONDS:-180}
+      CONVERSATION_AGENT_NAME: ${CONVERSATION_AGENT_NAME:-DOT-Interview-Tutor-MVP}
+      CONVERSATION_AGENT_VERSION: ${CONVERSATION_AGENT_VERSION:-1.0}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://openrouter.ai/api/v1}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

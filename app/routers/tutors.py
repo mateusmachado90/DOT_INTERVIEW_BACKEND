@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.conversation_agent import ConversationAgentError, run_tutor_conversation
+from app.conversation_agent import (
+    ConversationAgentError,
+    ConversationAgentProviderError,
+    ConversationAgentTimeoutError,
+    run_tutor_conversation,
+)
 from app.db import get_db
 from app.models import ChatMessage, ChatMessageRole, ChatSession, Tutor
 from app.schemas import TutorChatRequest, TutorChatResponse, TutorCreate, TutorRead, TutorUpdate
@@ -78,10 +83,20 @@ def chat_with_tutor(
             history=history,
             user_message=chat_in.message,
         )
+    except ConversationAgentTimeoutError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail=exc.user_message,
+        ) from exc
+    except ConversationAgentProviderError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=exc.user_message,
+        ) from exc
     except ConversationAgentError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Conversation agent unavailable",
+            detail=exc.user_message,
         ) from exc
 
     db.add_all(
