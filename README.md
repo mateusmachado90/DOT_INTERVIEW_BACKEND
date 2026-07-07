@@ -46,8 +46,24 @@ O valor padrao local e `dev-api-token`, configuravel por `API_TOKEN`.
 As origens liberadas para o frontend em desenvolvimento sao configuraveis por `CORS_ORIGINS`
 e, por padrao, incluem `http://localhost:5173` e `http://127.0.0.1:5173`.
 O modelo usado pelo agente de conversacao e configuravel por `LANGCHAIN_MODEL`.
+O timeout das chamadas do agente e configuravel por `CONVERSATION_AGENT_TIMEOUT_SECONDS`
+e usa `180` segundos por padrao para acomodar fluxos que acionam ferramentas e fontes externas.
 A identificacao enviada pelas ferramentas do agente pode ser ajustada por `CONVERSATION_AGENT_NAME` e `CONVERSATION_AGENT_VERSION`.
-Para usar o provedor OpenAI via LangChain, configure tambem `OPENAI_API_KEY`.
+
+Por padrao, o ambiente local usa o modelo gratuito `openai:tencent/hy3:free`,
+que pode ser acessado via OpenRouter usando a compatibilidade com a API da OpenAI.
+Para usar OpenRouter, configure:
+
+```env
+OPENAI_API_KEY=sua-chave-openrouter
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+LANGCHAIN_MODEL=openai:tencent/hy3:free
+CONVERSATION_AGENT_TIMEOUT_SECONDS=180
+```
+
+Para usar o provedor OpenAI diretamente via LangChain, configure `OPENAI_API_KEY`,
+defina `OPENAI_BASE_URL=https://api.openai.com/v1` quando estiver usando Docker Compose
+e selecione um modelo compativel em `LANGCHAIN_MODEL`.
 
 A API administrativa é protegida por uma única chave de API (API Key) configurada por meio de variáveis de ambiente. Como este MVP é destinado a um único usuário administrador e não exige gerenciamento de usuários nem autorização com controle granular de permissões, o uso de uma API Key oferece uma solução mais simples, com complexidade de implementação significativamente menor. Uma versão pronta para produção provavelmente adotaria autenticação baseada em JWT, integrada a um provedor de identidade.
 

@@ -1,14 +1,19 @@
+import logging
 import re
+import time
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 
 from app.config import get_settings
 from app.models import ChatMessage, ChatMessageRole, Tutor
 
+
+logger = logging.getLogger(__name__)
 
 MAX_SOURCE_CHARS = 16_000
 MAX_EXCERPT_CHARS = 2_500
@@ -16,7 +21,17 @@ MAX_HISTORY_MESSAGES = 8
 
 
 class ConversationAgentError(RuntimeError):
-    pass
+    user_message = "Falha ao executar o agente de conversacao."
+
+
+class ConversationAgentTimeoutError(ConversationAgentError):
+    user_message = "Tempo limite excedido ao consultar o provedor de IA."
+
+
+class ConversationAgentProviderError(ConversationAgentError):
+    def __init__(self, user_message: str) -> None:
+        super().__init__(user_message)
+        self.user_message = user_message
 
 
 class _TextExtractor(HTMLParser):
@@ -50,20 +65,104 @@ def run_tutor_conversation(
     history: list[ChatMessage],
     user_message: str,
 ) -> str:
+    settings = get_settings()
     tools = _build_knowledge_tools(tutor)
-    agent = create_agent(
-        model=get_settings().langchain_model,
-        tools=tools,
-        system_prompt=_build_system_prompt(tutor),
-    )
-
     messages = _build_messages(history, user_message)
+    started_at = time.monotonic()
     try:
+        logger.info(
+            "Starting tutor conversation",
+            extra={
+                "tutor_id": str(tutor.id),
+                "model": settings.langchain_model,
+                "tool_count": len(tools),
+                "timeout_seconds": settings.conversation_agent_timeout_seconds,
+            },
+        )
+        model = init_chat_model(
+            settings.langchain_model,
+            request_timeout=settings.conversation_agent_timeout_seconds,
+        )
+        agent = create_agent(
+            model=model,
+            tools=tools,
+            system_prompt=_build_system_prompt(tutor),
+        )
         result = agent.invoke({"messages": messages})
     except Exception as exc:  # pragma: no cover - depende do provedor LLM em runtime.
+        elapsed_seconds = time.monotonic() - started_at
+        if _is_timeout_error(exc):
+            logger.warning(
+                "Tutor conversation timed out",
+                extra={
+                    "tutor_id": str(tutor.id),
+                    "model": settings.langchain_model,
+                    "elapsed_seconds": round(elapsed_seconds, 2),
+                    "timeout_seconds": settings.conversation_agent_timeout_seconds,
+                    "exception_type": type(exc).__name__,
+                },
+            )
+            raise ConversationAgentTimeoutError() from exc
+        if _is_insufficient_credits_error(exc):
+            logger.warning(
+                "Tutor conversation provider rejected the request due to insufficient credits",
+                extra={
+                    "tutor_id": str(tutor.id),
+                    "model": settings.langchain_model,
+                    "elapsed_seconds": round(elapsed_seconds, 2),
+                    "exception_type": type(exc).__name__,
+                },
+            )
+            raise ConversationAgentProviderError(
+                "O provedor de IA recusou a chamada por creditos insuficientes."
+            ) from exc
+
+        logger.exception(
+            "Tutor conversation failed",
+            extra={
+                "tutor_id": str(tutor.id),
+                "model": settings.langchain_model,
+                "elapsed_seconds": round(elapsed_seconds, 2),
+                "exception_type": type(exc).__name__,
+            },
+        )
         raise ConversationAgentError("Falha ao executar o agente de conversacao.") from exc
 
+    logger.info(
+        "Tutor conversation completed",
+        extra={
+            "tutor_id": str(tutor.id),
+            "model": settings.langchain_model,
+            "elapsed_seconds": round(time.monotonic() - started_at, 2),
+        },
+    )
+
     return _extract_final_answer(result)
+
+
+def _is_timeout_error(exc: Exception) -> bool:
+    current: BaseException | None = exc
+    while current is not None:
+        text = str(current).lower()
+        if "timeout" in text or "timed out" in text:
+            return True
+        if type(current).__name__.lower() in {"timeout", "timeouterror", "apitimeouterror"}:
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
+def _is_insufficient_credits_error(exc: Exception) -> bool:
+    current: BaseException | None = exc
+    while current is not None:
+        text = str(current).lower()
+        status_code = getattr(current, "status_code", None)
+        if status_code == 402 and "insufficient" in text and "credit" in text:
+            return True
+        if "402" in text and "insufficient" in text and "credit" in text:
+            return True
+        current = current.__cause__ or current.__context__
+    return False
 
 
 def _build_system_prompt(tutor: Tutor) -> str:

@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     # Token simples para proteger endpoints administrativos do MVP.
     api_token: str = "dev-api-token"
     # Modelo usado pelo agente LangChain. Pode ser trocado sem alterar codigo.
-    langchain_model: str = "openai:gpt-4o-mini"
+    langchain_model: str = "openai:tencent/hy3:free"
+    # Timeout maximo para chamadas do agente, em segundos.
+    conversation_agent_timeout_seconds: float = 180.0
     # Identificacao enviada em requisicoes feitas pelas ferramentas do agente.
     conversation_agent_name: str = "DOT-Interview-Tutor-MVP"
     conversation_agent_version: str = "1.0"
