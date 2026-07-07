@@ -2,6 +2,10 @@
 
 Repositorio de backend da solucao de plataforma de tutores para entrevista na DOT Digital.
 
+## Nota sobre autoria
+
+Este codigo foi produzido com o apoio de agentes de codificacao, nao por codificacao integralmente manual.
+
 ## Ambiente local
 
 Este projeto usa Docker Compose para disponibilizar uma API FastAPI e um banco PostgreSQL local.
