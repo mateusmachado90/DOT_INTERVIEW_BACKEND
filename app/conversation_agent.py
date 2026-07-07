@@ -1,8 +1,9 @@
+import json
 import logging
 import re
 import time
 from html.parser import HTMLParser
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, unquote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 from langchain.agents import create_agent
@@ -15,7 +16,8 @@ from app.models import ChatMessage, ChatMessageRole, Tutor
 
 logger = logging.getLogger(__name__)
 
-MAX_SOURCE_CHARS = 16_000
+MAX_SOURCE_CHARS = 500_000
+MAX_EXTRACTED_SOURCE_CHARS = 40_000
 MAX_EXCERPT_CHARS = 2_500
 MAX_HISTORY_MESSAGES = 8
 
@@ -41,11 +43,14 @@ class _TextExtractor(HTMLParser):
         self._skip_depth = 0
 
     def handle_starttag(self, tag: str, _attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style", "nav", "footer", "header"}:
+        if tag in {"head", "script", "style", "nav", "footer", "header", "noscript"}:
             self._skip_depth += 1
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style", "nav", "footer", "header"} and self._skip_depth:
+        if (
+            tag in {"head", "script", "style", "nav", "footer", "header", "noscript"}
+            and self._skip_depth
+        ):
             self._skip_depth -= 1
 
     def handle_data(self, data: str) -> None:
@@ -236,9 +241,25 @@ def _load_source_text(location: str) -> str:
     if parsed.scheme not in {"http", "https"}:
         return f"Tipo de fonte ainda nao suportado para leitura automatica: {location}"
 
+    if _is_wikipedia_article_url(parsed):
+        wikipedia_extract = _load_wikipedia_extract(parsed)
+        if wikipedia_extract is not None:
+            return wikipedia_extract
+
+    return _load_html_source_text(location)
+
+
+def _load_html_source_text(location: str) -> str:
     settings = get_settings()
     user_agent = f"{settings.conversation_agent_name}/{settings.conversation_agent_version}"
-    request = Request(location, headers={"User-Agent": user_agent})
+    request = Request(
+        location,
+        headers={
+            "Accept": "text/html",
+            "Accept-Encoding": "identity",
+            "User-Agent": user_agent,
+        },
+    )
     try:
         with urlopen(request, timeout=10) as response:
             raw_html = response.read(MAX_SOURCE_CHARS).decode("utf-8", errors="ignore")
@@ -247,7 +268,67 @@ def _load_source_text(location: str) -> str:
 
     parser = _TextExtractor()
     parser.feed(raw_html)
-    return parser.text()
+    return parser.text()[:MAX_EXTRACTED_SOURCE_CHARS]
+
+
+def _is_wikipedia_article_url(parsed_url: ParseResult) -> bool:
+    hostname = parsed_url.hostname or ""
+    return hostname.endswith("wikipedia.org") and parsed_url.path.startswith("/wiki/")
+
+
+def _load_wikipedia_extract(parsed_url: ParseResult) -> str | None:
+    settings = get_settings()
+    user_agent = f"{settings.conversation_agent_name}/{settings.conversation_agent_version}"
+    article_title = unquote(parsed_url.path.removeprefix("/wiki/"))
+    api_query = urlencode(
+        {
+            "action": "query",
+            "format": "json",
+            "prop": "extracts",
+            "explaintext": "1",
+            "redirects": "1",
+            "titles": article_title,
+        }
+    )
+    api_url = f"{parsed_url.scheme}://{parsed_url.netloc}/w/api.php?{api_query}"
+    request = Request(
+        api_url,
+        headers={
+            "Accept": "application/json",
+            "Accept-Encoding": "identity",
+            "User-Agent": user_agent,
+        },
+    )
+
+    try:
+        with urlopen(request, timeout=10) as response:
+            raw_json = response.read(MAX_SOURCE_CHARS).decode("utf-8", errors="ignore")
+    except OSError as exc:
+        logger.warning(
+            "Wikipedia extract API request failed; falling back to HTML source loading",
+            extra={"source_url": parsed_url.geturl(), "exception_type": type(exc).__name__},
+        )
+        return None
+
+    try:
+        payload = json.loads(raw_json)
+    except json.JSONDecodeError:
+        logger.warning(
+            "Wikipedia extract API returned invalid JSON; falling back to HTML source loading",
+            extra={"source_url": parsed_url.geturl()},
+        )
+        return None
+
+    pages = payload.get("query", {}).get("pages", {})
+    extracts = [
+        page.get("extract", "").strip()
+        for page in pages.values()
+        if isinstance(page, dict) and page.get("extract")
+    ]
+    if not extracts:
+        return None
+
+    return "\n\n".join(extracts)[:MAX_EXTRACTED_SOURCE_CHARS]
 
 
 def _find_relevant_excerpt(text: str, query: str) -> str:
